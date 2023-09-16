@@ -44,6 +44,19 @@ GRAPHS:
     Photos / Videos count:
         - Pie chart comparing number of photos and videos sent by user
         - .txt ranking (better for large groups)
+
+    Vocabulary:
+        - Pie chart representing the number of different words in each user's vocabulary
+        - .txt ranking (better for large groups)
+    
+    Activity per day:
+        - Bar graph representing the number of messages sent per day
+    
+    Activity per month:
+        - Bar graph representing the number of messages sent per month
+    
+    Activity per hour and day of the week:
+        - Heatmap representing the time periods where most messages are sent throughout an average week
 '''
 import json
 import logging

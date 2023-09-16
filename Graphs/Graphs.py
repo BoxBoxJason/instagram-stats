@@ -38,16 +38,19 @@ def pieChartFigure(countList,usersList,titleFigure,titreGraph,colors,total = Non
     logging.debug(f"Creating {titleFigure} pie chart")
     if total is None:
         total = sum(countList)
-    pyplot.figure(titleFigure,facecolor='black')
-    pyplot.title(f"{titreGraph} (Total {total})",fontsize=15, color= 'white', fontweight='bold')
-    _,labeltext,pctg=pyplot.pie(countList,autopct='%1.1f%%',labels=usersList,colors = colors)
-    for i,labelText in enumerate(labeltext):
-        labelText.set_color('white')
-        pctg[i].set_color('white')
-    manager = pyplot.get_current_fig_manager()
-    manager.full_screen_toggle()
-    resultPath = os.path.join(resultDirPath,titleFigure)
-    pyplot.savefig(resultPath)
+    if total != 0:
+        pyplot.figure(titleFigure,facecolor='black')
+        pyplot.title(f"{titreGraph} (Total {total})",fontsize=15, color= 'white', fontweight='bold')
+        _,labeltext,pctg=pyplot.pie(countList,autopct='%1.1f%%',labels=usersList,colors = colors)
+        for i,labelText in enumerate(labeltext):
+            labelText.set_color('white')
+            pctg[i].set_color('white')
+        manager = pyplot.get_current_fig_manager()
+        manager.full_screen_toggle()
+        resultPath = os.path.join(resultDirPath,titleFigure)
+        pyplot.savefig(resultPath)
+    else:
+        logging.error(f"Pie chart: {titleFigure} could not be outputed because all counts are 0")
 
 
 def heatMapFigure(grid,titleFigure,titleGraph,labelX,labelY):

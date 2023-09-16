@@ -10,7 +10,7 @@ import sys
 
 def getConfig(configDict):
     wordsToSearchFor = configDict.get("wordsToSearchFor",[])
-    resultDirPath = configDict.get("resultDir",os.path.join(__file__,"..","..","Results"))
+    resultDirPath = os.path.realpath(configDict.get("resultDir",os.path.join(__file__,"..","..","Results")))
     outputTextRanking = configDict.get("outputTextRanking",True)
     if os.path.exists(resultDirPath) and os.path.isdir(resultDirPath) and os.access(resultDirPath,os.W_OK):
         os.environ['RESULTSDIRPATH'] = resultDirPath

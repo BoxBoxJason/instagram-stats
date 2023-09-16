@@ -163,5 +163,5 @@ if outputTextRanking:
                     "Number of words found (Total {})","Number of words found")
 
 logging.info(f"End of generation, check results in {resultDirPath}")
-logging.info("Runtime {time.time()-beg}")
+logging.info(f"Runtime {time.time()-beg}")
 #pyplot.show() #uncomment to open tabs

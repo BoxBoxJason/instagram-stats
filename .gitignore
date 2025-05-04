@@ -1,0 +1,6 @@
+sonar-project.properties
+.vscode/
+dist/
+go.sum
+data/
+graphs/

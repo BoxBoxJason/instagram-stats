@@ -1,58 +1,27 @@
 # Instagram Messages Statistics
-Creates Instagram messages statistics from your conversations.<br/>
-Input conversation data collected from instagram and builds a complete set of graphs and .txt files to display statistics.<br/>
-*Before launching, you must download your data from Instagram (.json format)*
 
-Can be used to analyse one to one conversations, group conversations and even mix several different conversations
+Creates statistics from your Instagram conversations: it reads the messages of your Instagram data export (JSON format), and builds a set of graphs and `.txt` rankings (messages, reactions, reels, photos and videos, vocabulary, activity per day, month and hour of the week).
 
-### LAUNCH:
-    Takes one or two arguments:
-        - First argument (mandatory) is the path to messages source folder (the messages must be directly below the folder)
-        - Second argument (optional) is the path to the config.json file, by default it's in Config/config.json
-```
-python Instagram_Messages_Statistics [source folder path] [(optional) config file path]
-```
+It can analyse one to one conversations, group conversations, and even several conversations mixed together. Your data stays on your machine.
 
-### CONFIG:
-    In the Config/config.json, you can select 3 options:
-        - resultDirPath [string] (optional): the path to a folder were results will be outputed, default: Results
-        - wordsToSearchFor [list] (optional) : list of words, default: []
-        - outputTextRanking [bool] (optional) : defines if output should include
-                            text rankings (easier to read for large group conversations), default: True
+## Documentation
 
-### GRAPHS:
+📖 **<https://boxboxjason.github.io/instagram-stats/>**
 
-    Occurences of vocabulary (optionnal):
-        - Pie chart comparing occurences of chosen word(s)
-        Shows how many times a word has been used by users
-        Can be abled / disabled in config.json file: words to search for are inputed as a list
-        - .txt ranking (better for large groups)
-    
-    Messages count:
-        - Pie chart comparing number of messages by user
-        - .txt ranking (better for large groups)
-    
-    Reactions count:
-        - Pie chart comparing number of reactions by user
-        - .txt ranking (better for large groups)
+The documentation covers [exporting your data from Instagram](https://boxboxjason.github.io/instagram-stats/docs/export/), [usage](https://boxboxjason.github.io/instagram-stats/docs/usage/), every [configuration option](https://boxboxjason.github.io/instagram-stats/docs/configuration/) and the [generated files](https://boxboxjason.github.io/instagram-stats/docs/outputs/). It is built from the [`docs`](./docs) directory of this repository.
 
-    Reels count:
-        - Pie chart comparing number of reels sent by user
-        - .txt ranking (better for large groups)
+## Quick start
 
-    Photos / Videos count:
-        - Pie chart comparing number of photos and videos sent by user
-        - .txt ranking (better for large groups)
+1. Download your messages from Instagram, in **JSON** format.
+2. Install Python 3 and matplotlib (`pip install matplotlib`), and clone this repository.
+3. Create the result folder, `Results` in the project by default, then run:
 
-    Vocabulary:
-        - Pie chart representing the number of different words in each user's vocabulary
-        - .txt ranking (better for large groups)
+   ```bash
+   python3 instagram-stats <conversation folder> [<config.json>]
+   ```
 
-    Activity per day:
-        - Bar graph representing the number of messages sent per day
+The graphs and rankings are written to the result folder.
 
-    Activity per month:
-        - Bar graph representing the number of messages sent per month
+## Documentation development
 
-    Activity per hour and day of the week:
-        - Heatmap representing the time periods where most messages are sent throughout an average week
+The site is built with [Hugo](https://gohugo.io/) (extended edition) and the shared [hugo-theme](https://github.com/boxboxjason/hugo-theme): `hugo server --source docs` serves it locally. Change it in the same pull request as the code it describes. `python3 -I docs/check_docs.py` (also run by CI) fails when a configuration option or an output file is not documented.

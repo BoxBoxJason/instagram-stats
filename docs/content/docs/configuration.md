@@ -1,5 +1,6 @@
 ---
 title: Configuration
+description: "Every option of the instagram-stats JSON configuration file, with its default value and an example configuration."
 weight: 40
 ---
 

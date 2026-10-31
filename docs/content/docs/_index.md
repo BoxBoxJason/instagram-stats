@@ -1,5 +1,6 @@
 ---
 title: Documentation
+description: "Documentation for instagram-stats, a Python tool that builds graphs and text rankings from your Instagram conversations."
 weight: 1
 ---
 

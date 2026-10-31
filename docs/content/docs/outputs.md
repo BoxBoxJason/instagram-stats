@@ -1,5 +1,6 @@
 ---
 title: Outputs
+description: "The graphs and text rankings instagram-stats writes for a conversation: message counts, activity over time and words used."
 weight: 50
 ---
 

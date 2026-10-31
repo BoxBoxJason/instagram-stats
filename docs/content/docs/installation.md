@@ -1,5 +1,6 @@
 ---
 title: Installation
+description: "Install instagram-stats: Python 3, its only dependency matplotlib, and how to get the project code on your machine."
 weight: 10
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: Export your data
+description: "Request your Instagram data export in JSON format and find the conversation folders that instagram-stats analyses."
 weight: 20
 ---
 

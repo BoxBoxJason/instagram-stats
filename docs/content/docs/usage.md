@@ -1,5 +1,6 @@
 ---
 title: Usage
+description: "Run instagram-stats on an Instagram conversation folder, analyse several conversations together, and read its logs."
 weight: 30
 ---
 

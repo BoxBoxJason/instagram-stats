@@ -35,5 +35,10 @@ enableRobotsTXT = true
       icon = "github"
 
 [params]
+  description = "instagram-stats turns your Instagram message export into graphs and rankings of who talks most, when and with which words."
+  images = ["images/social.png"]
+  [params.project]
+    repository = "https://github.com/boxboxjason/instagram-stats"
+    programmingLanguage = "Python"
   [params.editURL]
     base = "https://github.com/boxboxjason/instagram-stats/edit/main/docs/content"

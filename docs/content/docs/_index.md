@@ -1,6 +1,6 @@
 ---
 title: Documentation
-description: "Documentation for instagram-stats, a Python tool that builds graphs and text rankings from your Instagram conversations."
+description: "Documentation for instagram-stats, a Go program that builds graphs and text rankings from your Instagram conversations."
 weight: 1
 ---
 
@@ -13,7 +13,7 @@ Your data stays on your machine: instagram-stats only reads local files and writ
 {{< /callout >}}
 
 {{< cards >}}
-  {{< card link="installation" title="Installation" subtitle="Python and matplotlib, then get the code." >}}
+  {{< card link="installation" title="Installation" subtitle="Install it with Go, or build it from source." >}}
   {{< card link="export" title="Export your data" subtitle="Download your messages from Instagram in JSON format." >}}
   {{< card link="usage" title="Usage" subtitle="Run it on a conversation, or several." >}}
   {{< card link="configuration" title="Configuration" subtitle="Choose the output folder, words to search for, text rankings." >}}

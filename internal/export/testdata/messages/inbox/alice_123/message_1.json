@@ -1,0 +1,51 @@
+{
+  "participants": [
+    {"name": "Alice CafÃ©"},
+    {"name": "Bob"}
+  ],
+  "messages": [
+    {
+      "sender_name": "Bob",
+      "timestamp_ms": 1700000300000,
+      "content": "ð\u009f\u0098\u0082 trop drÃ´le",
+      "reactions": [{"reaction": "â\u009d¤", "actor": "Alice CafÃ©", "timestamp": 1700000400}],
+      "is_geoblocked_for_viewer": false,
+      "is_unsent_image_by_messenger_kid_parent": false
+    },
+    {
+      "sender_name": "Alice CafÃ©",
+      "timestamp_ms": 1700000200000,
+      "content": "Alice CafÃ© sent an attachment.",
+      "share": {"link": "https://www.instagram.com/reel/abc/", "share_text": "caption", "original_content_owner": "someone"},
+      "is_geoblocked_for_viewer": false,
+      "is_unsent_image_by_messenger_kid_parent": false
+    },
+    {
+      "sender_name": "Bob",
+      "timestamp_ms": 1700000100000,
+      "photos": [{"uri": "your_instagram_activity/messages/inbox/alice_123/photos/1.jpg", "creation_timestamp": 1700000100}],
+      "videos": [{"uri": "your_instagram_activity/messages/inbox/alice_123/videos/1.mp4"}],
+      "is_geoblocked_for_viewer": false,
+      "is_unsent_image_by_messenger_kid_parent": false
+    },
+    {
+      "sender_name": "Bob",
+      "timestamp_ms": 1700000050000,
+      "audio_files": [{"uri": "your_instagram_activity/messages/inbox/alice_123/audio/1.aac", "creation_timestamp": 1700000050}],
+      "is_geoblocked_for_viewer": false,
+      "is_unsent_image_by_messenger_kid_parent": false
+    },
+    {
+      "sender_name": "Alice CafÃ©",
+      "timestamp_ms": 1700000000000,
+      "content": "Audio call ended",
+      "call_duration": 42,
+      "is_geoblocked_for_viewer": false
+    }
+  ],
+  "title": "Alice CafÃ©",
+  "is_still_participant": true,
+  "thread_path": "inbox/alice_123",
+  "magic_words": [],
+  "joinable_mode": {"mode": 1, "link": ""}
+}

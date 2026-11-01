@@ -15,63 +15,60 @@ import (
 
 // count is a count per participant, drawn as a pie chart and written as a ranking.
 type count struct {
-	// chart is the name of the pie chart file, without its extension.
-	chart string
-	// title is the title of the pie chart.
-	title string
-	// ranking is the name of the ranking file, without its extension.
-	ranking string
-	// rankingTitle is the first line of the ranking file.
-	rankingTitle string
-	// unit is what is counted, such as "messages".
-	unit string
-	// value returns the count of a participant.
-	value func(*stats.Participant) int
-	// total returns the total of the counts, their sum when nil.
-	total func(*stats.Stats) int
-	// searchedWords is set for the count that only exists when words are searched.
+	value         func(*stats.Participant) int
+	total         func(*stats.Stats) int
+	chart         string
+	title         string
+	ranking       string
+	rankingTitle  string
+	unit          string
 	searchedWords bool
 }
 
-var counts = []count{
-	{
-		chart: "Number of words found", title: "Number of words found",
-		ranking: "Number of words found", rankingTitle: "Number of words found",
-		unit:          "words found",
-		value:         func(p *stats.Participant) int { return p.WordsFound },
-		searchedWords: true,
-	},
-	{
-		chart: "Vocabulary", title: "Vocabulary richness (words)",
-		ranking: "Vocabulary richness", rankingTitle: "Vocabulary richness ranking",
-		unit:  "different words",
-		value: (*stats.Participant).Vocabulary,
-		total: (*stats.Stats).VocabularySize,
-	},
-	{
-		chart: "Number of Messages", title: "Number of Messages",
-		ranking: "Number of messages", rankingTitle: "Number of messages ranking",
-		unit:  "messages",
-		value: func(p *stats.Participant) int { return p.Messages },
-	},
-	{
-		chart: "Number of Reactions", title: "Reactions to messages",
-		ranking: "Number of reactions", rankingTitle: "Number of reactions ranking",
-		unit:  "reactions",
-		value: func(p *stats.Participant) int { return p.Reactions },
-	},
-	{
-		chart: "Number of Reels sent", title: "Reels sent",
-		ranking: "Number of reels", rankingTitle: "Number of reels sent ranking",
-		unit:  "reels",
-		value: func(p *stats.Participant) int { return p.Reels },
-	},
-	{
-		chart: "Number of photos and videos sent", title: "Photos and videos sent",
-		ranking: "Number of photos and videos", rankingTitle: "Number of photos and videos ranking",
-		unit:  "photos and videos",
-		value: func(p *stats.Participant) int { return p.PhotosAndVideos },
-	},
+const wordsFound = "Number of words found"
+
+// counts returns the counts drawn and ranked, in the order of the report.
+func counts() []count {
+	return []count{
+		{
+			chart: wordsFound, title: wordsFound,
+			ranking: wordsFound, rankingTitle: wordsFound,
+			unit:          "words found",
+			value:         func(p *stats.Participant) int { return p.WordsFound },
+			searchedWords: true,
+		},
+		{
+			chart: "Vocabulary", title: "Vocabulary richness (words)",
+			ranking: "Vocabulary richness", rankingTitle: "Vocabulary richness ranking",
+			unit:  "different words",
+			value: (*stats.Participant).Vocabulary,
+			total: (*stats.Stats).VocabularySize,
+		},
+		{
+			chart: "Number of Messages", title: "Number of Messages",
+			ranking: "Number of messages", rankingTitle: "Number of messages ranking",
+			unit:  "messages",
+			value: func(p *stats.Participant) int { return p.Messages },
+		},
+		{
+			chart: "Number of Reactions", title: "Reactions to messages",
+			ranking: "Number of reactions", rankingTitle: "Number of reactions ranking",
+			unit:  "reactions",
+			value: func(p *stats.Participant) int { return p.Reactions },
+		},
+		{
+			chart: "Number of Reels sent", title: "Reels sent",
+			ranking: "Number of reels", rankingTitle: "Number of reels sent ranking",
+			unit:  "reels",
+			value: func(p *stats.Participant) int { return p.Reels },
+		},
+		{
+			chart: "Number of photos and videos sent", title: "Photos and videos sent",
+			ranking: "Number of photos and videos", rankingTitle: "Number of photos and videos ranking",
+			unit:  "photos and videos",
+			value: func(p *stats.Participant) int { return p.PhotosAndVideos },
+		},
+	}
 }
 
 // Names of the files of the activity graphs, without their extension.
@@ -91,76 +88,119 @@ type Options struct {
 
 // Files returns the names of all the files a report can write, whatever its options.
 func Files() []string {
-	var files []string
-	for _, c := range counts {
-		files = append(files, c.chart+".png")
+	all := counts()
+	files := make([]string, 0, 2*len(all)+activityCharts)
+
+	for _, entry := range all {
+		files = append(files, entry.chart+".png")
 	}
+
 	files = append(files, weekChart+".png", daysChart+".png", monthChart+".png")
-	for _, c := range counts {
-		files = append(files, c.ranking+".txt")
+	for _, entry := range all {
+		files = append(files, entry.ranking+".txt")
 	}
+
 	return files
 }
 
-// Write writes the graphs and rankings of s to dir, which must exist.
-func Write(dir string, s *stats.Stats, options Options, logger *zap.Logger) error {
-	for _, c := range counts {
-		if c.searchedWords && !options.SearchedWords {
+// activityCharts is the number of graphs of the activity over time.
+const activityCharts = 3
+
+// rankingMode is the permissions of the ranking files.
+const rankingMode = 0o600
+
+// Write writes the graphs and rankings of statistics to dir, which must exist.
+func Write(dir string, statistics *stats.Stats, options Options, logger *zap.Logger) error {
+	for _, entry := range counts() {
+		if entry.searchedWords && !options.SearchedWords {
 			continue
 		}
-		total := c.totalOf(s)
-		if err := writePie(dir, s, c, total, logger); err != nil {
+
+		total := entry.totalOf(statistics)
+
+		err := writePie(dir, statistics, entry, total, logger)
+		if err != nil {
 			return err
 		}
+
 		if options.TextRankings {
-			path := filepath.Join(dir, c.ranking+".txt")
-			logger.Debug("writing ranking", zap.String("file", path))
-			ranking := formatRanking(fmt.Sprintf("%s (Total %d):", c.rankingTitle, total), c.unit, s.Ranking(c.value))
-			if err := os.WriteFile(path, []byte(ranking), 0o644); err != nil {
+			err = writeRanking(dir, statistics, entry, total, logger)
+			if err != nil {
 				return err
 			}
 		}
 	}
 
-	days := s.Days()
+	return writeActivity(dir, statistics, logger)
+}
+
+// writeRanking writes the text ranking of entry to dir.
+func writeRanking(dir string, statistics *stats.Stats, entry count, total int, logger *zap.Logger) error {
+	path := filepath.Join(dir, entry.ranking+".txt")
+	logger.Debug("writing ranking", zap.String("file", path))
+
+	title := fmt.Sprintf("%s (Total %d):", entry.rankingTitle, total)
+	ranking := formatRanking(title, entry.unit, statistics.Ranking(entry.value))
+
+	err := os.WriteFile(path, []byte(ranking), rankingMode)
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+
+	return nil
+}
+
+// writeActivity writes the graphs of the activity over time, unless there are no messages.
+func writeActivity(dir string, statistics *stats.Stats, logger *zap.Logger) error {
+	days := statistics.Days()
 	if len(days) == 0 {
 		logger.Warn("no messages: skipping the activity graphs")
+
 		return nil
 	}
-	if err := writeChart(dir, weekChart, logger, func(dc draw.Canvas) {
-		drawHeatmap(dc, "Activity by time and day", s.AverageWeek())
-	}); err != nil {
+
+	err := writeChart(dir, weekChart, logger, func(canvas draw.Canvas) {
+		drawHeatmap(canvas, "Activity by time and day", statistics.AverageWeek())
+	})
+	if err != nil {
 		return err
 	}
-	if err := writeChart(dir, daysChart, logger, func(dc draw.Canvas) {
-		drawBars(dc, "Messages per day", "Date", "Number of messages", days, dayBarColor)
-	}); err != nil {
+
+	err = writeChart(dir, daysChart, logger, func(canvas draw.Canvas) {
+		drawBars(canvas, "Messages per day", "Date", "Number of messages", days, dayBarColor())
+	})
+	if err != nil {
 		return err
 	}
-	return writeChart(dir, monthChart, logger, func(dc draw.Canvas) {
-		drawBars(dc, "Messages per month", "Month", "Number of messages", s.Months(), monthBarColor)
+
+	return writeChart(dir, monthChart, logger, func(canvas draw.Canvas) {
+		drawBars(canvas, "Messages per month", "Month", "Number of messages", statistics.Months(), monthBarColor())
 	})
 }
 
-func (c count) totalOf(s *stats.Stats) int {
-	if c.total != nil {
-		return c.total(s)
+func (entry count) totalOf(statistics *stats.Stats) int {
+	if entry.total != nil {
+		return entry.total(statistics)
 	}
+
 	total := 0
-	for _, p := range s.Participants() {
-		total += c.value(p)
+	for _, participant := range statistics.Participants() {
+		total += entry.value(participant)
 	}
+
 	return total
 }
 
-func writePie(dir string, s *stats.Stats, c count, total int, logger *zap.Logger) error {
-	pie := pieSlices(s.Participants(), c.value)
+func writePie(dir string, statistics *stats.Stats, entry count, total int, logger *zap.Logger) error {
+	pie := pieSlices(statistics.Participants(), entry.value)
 	if len(pie) == 0 {
-		logger.Info("skipping pie chart: every count is 0", zap.String("chart", c.chart))
+		logger.Info("skipping pie chart: every count is 0", zap.String("chart", entry.chart))
+
 		return nil
 	}
-	return writeChart(dir, c.chart, logger, func(dc draw.Canvas) {
-		drawPie(dc, fmt.Sprintf("%s (Total %s)", c.title, formatCount(total)), c.unit, pie)
+
+	return writeChart(dir, entry.chart, logger, func(canvas draw.Canvas) {
+		drawPie(canvas, fmt.Sprintf("%s (Total %s)", entry.title, formatCount(total)), entry.unit, pie)
 	})
 }
 
@@ -168,17 +208,21 @@ func writePie(dir string, s *stats.Stats, c count, total int, logger *zap.Logger
 func writeChart(dir, name string, logger *zap.Logger, drawChart func(draw.Canvas)) error {
 	path := filepath.Join(dir, name+".png")
 	logger.Debug("writing graph", zap.String("file", path))
-	img, dc := newCanvas()
-	drawChart(draw.Crop(dc, margin, -margin, margin, -margin))
+
+	img, canvas := newCanvas()
+	drawChart(draw.Crop(canvas, margin, -margin, margin, -margin))
+
 	return savePNG(img, path)
 }
 
 // formatRanking returns the text of a ranking: its title, then a line per rank.
 func formatRanking(title, unit string, ranking []stats.Rank) string {
-	var b strings.Builder
-	b.WriteString(title + "\n")
+	var out strings.Builder
+	out.WriteString(title + "\n")
+
 	for i, rank := range ranking {
-		fmt.Fprintf(&b, "%d: %d %s: %s\n", i+1, rank.Count, unit, strings.Join(rank.Names, ", "))
+		fmt.Fprintf(&out, "%d: %d %s: %s\n", i+1, rank.Count, unit, strings.Join(rank.Names, ", "))
 	}
-	return b.String()
+
+	return out.String()
 }

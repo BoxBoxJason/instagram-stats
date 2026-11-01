@@ -11,25 +11,14 @@ import (
 
 // Conversation is the content of one message_<n>.json file of the export.
 type Conversation struct {
-	// Participants are the members of the conversation. Messages and reactions can
-	// still come from people who left it and are not listed anymore.
-	Participants []Participant `json:"participants"`
-	// Messages are sorted from the most recent to the oldest.
-	Messages []Message `json:"messages"`
-	// Title is the name of the conversation: the other participant's name for a
-	// one to one conversation, the group name otherwise.
-	Title Text `json:"title"`
-	// IsStillParticipant is false when the owner of the export left the conversation.
-	IsStillParticipant bool `json:"is_still_participant"`
-	// ThreadPath is the folder of the conversation in the export, relative to the
-	// messages folder, such as "inbox/alice_123456789".
-	ThreadPath string `json:"thread_path"`
-	// MagicWords is always empty in the exports seen so far.
-	MagicWords []json.RawMessage `json:"magic_words"`
-	// IsPending is only set for the conversations of the message_requests folder.
-	IsPending *bool `json:"is_pending,omitempty"`
-	// JoinableMode is only set for the group conversations that can be joined by link.
-	JoinableMode *JoinableMode `json:"joinable_mode,omitempty"`
+	IsPending          *bool             `json:"is_pending,omitempty"`
+	JoinableMode       *JoinableMode     `json:"joinable_mode,omitempty"`
+	Title              Text              `json:"title"`
+	ThreadPath         string            `json:"thread_path"`
+	Participants       []Participant     `json:"participants"`
+	Messages           []Message         `json:"messages"`
+	MagicWords         []json.RawMessage `json:"magic_words"`
+	IsStillParticipant bool              `json:"is_still_participant"`
 }
 
 // Participant is a member of a conversation.
@@ -40,34 +29,24 @@ type Participant struct {
 
 // JoinableMode describes how a group conversation can be joined.
 type JoinableMode struct {
-	Mode int    `json:"mode"`
 	Link string `json:"link"`
+	Mode int    `json:"mode"`
 }
 
 // Message is a message of a conversation. Besides its text, a message can hold a
 // share (a reel, a post, a profile...), photos, videos, audio files or a call.
 type Message struct {
-	// SenderName is the display name of the sender, see [Participant.Name].
-	SenderName Text `json:"sender_name"`
-	// TimestampMs is the Unix time the message was sent at, in milliseconds.
-	TimestampMs int64 `json:"timestamp_ms"`
-	// Content is the text of the message, empty when there is none. Instagram also
-	// writes placeholders there, such as "Alice sent an attachment." for a share.
-	Content Text `json:"content,omitempty"`
-	// Share is the reel, post or profile shared by the message.
-	Share *Share `json:"share,omitempty"`
-	// Photos and Videos are the media sent with the message: a message can hold both.
-	Photos []Media `json:"photos,omitempty"`
-	Videos []Media `json:"videos,omitempty"`
-	// AudioFiles are the voice messages.
-	AudioFiles []Media `json:"audio_files,omitempty"`
-	// CallDuration is set, in seconds, for the messages logging an audio or video call.
-	CallDuration *int64 `json:"call_duration,omitempty"`
-	// Reactions are the reactions participants added to the message.
-	Reactions []Reaction `json:"reactions,omitempty"`
-
-	IsGeoblockedForViewer             bool `json:"is_geoblocked_for_viewer"`
-	IsUnsentImageByMessengerKidParent bool `json:"is_unsent_image_by_messenger_kid_parent"`
+	Share                             *Share     `json:"share,omitempty"`
+	CallDuration                      *int64     `json:"call_duration,omitempty"`
+	SenderName                        Text       `json:"sender_name"`
+	Content                           Text       `json:"content,omitempty"`
+	Photos                            []Media    `json:"photos,omitempty"`
+	Videos                            []Media    `json:"videos,omitempty"`
+	AudioFiles                        []Media    `json:"audio_files,omitempty"`
+	Reactions                         []Reaction `json:"reactions,omitempty"`
+	TimestampMs                       int64      `json:"timestamp_ms"`
+	IsGeoblockedForViewer             bool       `json:"is_geoblocked_for_viewer"`
+	IsUnsentImageByMessengerKidParent bool       `json:"is_unsent_image_by_messenger_kid_parent"`
 }
 
 // Time returns the time the message was sent at.

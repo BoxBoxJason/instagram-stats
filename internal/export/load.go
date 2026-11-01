@@ -19,17 +19,22 @@ var ErrNotConversation = errors.New("not an Instagram conversation file")
 
 // ReadFile reads the conversation file at path.
 func ReadFile(path string) (*Conversation, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading %s: %w", path, err)
 	}
+
 	var conversation Conversation
-	if err := json.Unmarshal(data, &conversation); err != nil {
+
+	err = json.Unmarshal(data, &conversation)
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
+
 	if conversation.Participants == nil && conversation.Messages == nil {
 		return nil, fmt.Errorf("%s: %w", path, ErrNotConversation)
 	}
+
 	return &conversation, nil
 }
 
@@ -41,17 +46,21 @@ func ReadFile(path string) (*Conversation, error) {
 // conversations or cannot be read are skipped, and logged to logger.
 func Load(sources []string, logger *zap.Logger) ([]*Conversation, error) {
 	var conversations []*Conversation
+
 	for _, source := range sources {
 		info, err := os.Stat(source)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("reading the source: %w", err)
 		}
+
 		if !info.IsDir() {
-			conversation, err := ReadFile(source)
-			if err != nil {
-				return nil, err
+			conversation, readErr := ReadFile(source)
+			if readErr != nil {
+				return nil, readErr
 			}
+
 			conversations = append(conversations, conversation)
+
 			continue
 		}
 
@@ -59,34 +68,46 @@ func Load(sources []string, logger *zap.Logger) ([]*Conversation, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		for _, file := range files {
 			logger.Debug("reading conversation file", zap.String("file", file))
-			conversation, err := ReadFile(file)
+
+			conversation, readErr := ReadFile(file)
+
 			switch {
-			case errors.Is(err, ErrNotConversation):
+			case errors.Is(readErr, ErrNotConversation):
 				logger.Debug("skipping file, it is not a conversation", zap.String("file", file))
-			case err != nil:
-				logger.Warn("skipping file, it could not be read", zap.Error(err))
+			case readErr != nil:
+				logger.Warn("skipping file, it could not be read", zap.Error(readErr))
 			default:
 				conversations = append(conversations, conversation)
 			}
 		}
 	}
+
 	return conversations, nil
 }
 
 // jsonFiles returns the .json files under dir, sorted for a reproducible order.
 func jsonFiles(dir string) ([]string, error) {
 	var files []string
+
 	err := filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if !entry.IsDir() && strings.EqualFold(filepath.Ext(path), ".json") {
 			files = append(files, path)
 		}
+
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("listing the files of %s: %w", dir, err)
+	}
+
 	sort.Strings(files)
-	return files, err
+
+	return files, nil
 }

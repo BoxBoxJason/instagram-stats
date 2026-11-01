@@ -2,8 +2,12 @@ package export
 
 import (
 	"encoding/json"
+	"fmt"
 	"unicode/utf8"
 )
+
+// maxByte is the largest value of a byte.
+const maxByte = 0xFF
 
 // Text is a string of the export, repaired from the encoding Instagram writes it in.
 //
@@ -14,11 +18,15 @@ type Text string
 
 // UnmarshalJSON decodes a JSON string and repairs its encoding.
 func (t *Text) UnmarshalJSON(data []byte) error {
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
+	var decoded string
+
+	err := json.Unmarshal(data, &decoded)
+	if err != nil {
+		return fmt.Errorf("decoding a text: %w", err)
 	}
-	*t = Text(repairEncoding(s))
+
+	*t = Text(repairEncoding(decoded))
+
 	return nil
 }
 
@@ -27,29 +35,36 @@ func (t Text) String() string {
 	return string(t)
 }
 
-// repairEncoding returns s with each of its characters taken as a byte, when they
-// make valid UTF-8. Otherwise s is not in the broken encoding, and is returned as is.
-func repairEncoding(s string) string {
+// repairEncoding returns text with each of its characters taken as a byte, when they
+// make valid UTF-8. Otherwise text is not in the broken encoding, and is returned as is.
+func repairEncoding(text string) string {
 	ascii := true
-	for i := 0; i < len(s); i++ {
-		if s[i] >= utf8.RuneSelf {
+
+	for i := range len(text) {
+		if text[i] >= utf8.RuneSelf {
 			ascii = false
+
 			break
 		}
 	}
+
 	if ascii {
-		return s
+		return text
 	}
 
-	repaired := make([]byte, 0, len(s))
-	for _, r := range s {
-		if r > 0xFF {
-			return s
+	repaired := make([]byte, 0, len(text))
+
+	for _, char := range text {
+		if char > maxByte {
+			return text
 		}
-		repaired = append(repaired, byte(r))
+
+		repaired = append(repaired, byte(char&maxByte))
 	}
+
 	if !utf8.Valid(repaired) {
-		return s
+		return text
 	}
+
 	return string(repaired)
 }

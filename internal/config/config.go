@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Config is the configuration of a run. Every option of the file is optional.
@@ -32,18 +33,23 @@ func Default() Config {
 // Load reads the configuration file at path. An option missing from the file keeps
 // its default value, and an unknown option is an error, to catch typos.
 func Load(path string) (Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("reading the configuration file: %w", err)
 	}
+
 	cfg := Default()
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&cfg); err != nil {
+
+	err = decoder.Decode(&cfg)
+	if err != nil {
 		return Config{}, fmt.Errorf("invalid configuration file %s: %w", path, err)
 	}
+
 	if cfg.ResultDir == "" {
 		return Config{}, fmt.Errorf("invalid configuration file %s: resultDir is empty", path)
 	}
+
 	return cfg, nil
 }

@@ -23,96 +23,144 @@ const minPercentLabel = 0.04
 
 // slice is a slice of a pie chart.
 type slice struct {
+	color color.Color
 	label string
 	value int
-	color color.Color
 }
 
 // pieSlices returns the slices of the participants whose count is not 0, from the
 // biggest to the smallest.
 func pieSlices(participants []*stats.Participant, count func(*stats.Participant) int) []slice {
 	var pie []slice
-	for i, p := range participants {
-		if n := count(p); n > 0 {
-			pie = append(pie, slice{label: drawable(p.Name), value: n, color: participantColor(i)})
+
+	for i, participant := range participants {
+		if total := count(participant); total > 0 {
+			pie = append(pie, slice{label: drawable(participant.Name), value: total, color: participantColor(i)})
 		}
 	}
+
 	slices.SortStableFunc(pie, func(a, b slice) int { return cmp.Compare(b.value, a.value) })
+
 	if len(pie) > maxSlices {
-		others := slice{label: fmt.Sprintf("%d others", len(pie)-maxSlices+1), color: othersColor}
-		for _, s := range pie[maxSlices-1:] {
-			others.value += s.value
+		others := slice{label: fmt.Sprintf("%d others", len(pie)-maxSlices+1), color: othersColor()}
+		for _, entry := range pie[maxSlices-1:] {
+			others.value += entry.value
 		}
+
 		pie = append(pie[:maxSlices-1], others)
 	}
+
 	return pie
 }
 
+// half is a half, to take the middle of a length, and fullTurn the angle of a turn.
+const (
+	half     = 0.5
+	fullTurn = 2 * math.Pi
+)
+
+// Dimensions of the pie charts.
+const (
+	titleSize        = 22
+	percentSize      = 13
+	percentRadius    = 0.68 // distance of the percentage of a slice from the center, in radiuses
+	topSpace         = 0.85 * vg.Inch
+	bottomSpace      = 0.15 * vg.Inch
+	leftSpace        = 0.35 * vg.Inch
+	legendGap        = 0.8 * vg.Inch
+	legendRowHeight  = 0.42 * vg.Inch
+	legendMinFont    = 9
+	legendMaxFont    = 16
+	legendFontRatio  = 0.55 // font size of the legend, in row heights
+	legendTextOffset = 1.6  // space of the swatch before the text of the legend, in font sizes
+	sliceBorder      = 1.5
+	fullPercent      = 100
+)
+
 // drawPie draws a pie chart of slices, titled title, with a legend giving the count of
 // each slice in unit.
-func drawPie(dc draw.Canvas, title, unit string, pie []slice) {
-	width := dc.Max.X - dc.Min.X
+func drawPie(canvas draw.Canvas, title, unit string, pie []slice) {
+	width := canvas.Max.X - canvas.Min.X
 
-	titleStyle := textStyle(22, true, textColor)
+	titleStyle := textStyle(titleSize, true, textColor())
 	titleStyle.XAlign, titleStyle.YAlign = draw.XCenter, draw.YTop
-	dc.FillText(titleStyle, vg.Point{X: dc.Min.X + width/2, Y: dc.Max.Y}, title)
+	canvas.FillText(titleStyle, vg.Point{X: canvas.Min.X + width/2, Y: canvas.Max.Y}, title)
 
-	top, bottom := dc.Max.Y-0.85*vg.Inch, dc.Min.Y+0.15*vg.Inch
-	radius := (top - bottom) / 2
-	center := vg.Point{X: dc.Min.X + 0.35*vg.Inch + radius, Y: (top + bottom) / 2}
+	top, bottom := canvas.Max.Y-topSpace, canvas.Min.Y+bottomSpace
+	radius := (top - bottom) * half
+	center := vg.Point{X: canvas.Min.X + leftSpace + radius, Y: (top + bottom) * half}
 
 	sum := 0
-	for _, s := range pie {
-		sum += s.value
+	for _, entry := range pie {
+		sum += entry.value
 	}
 
-	start := math.Pi / 2
-	for _, s := range pie {
-		sweep := 2 * math.Pi * float64(s.value) / float64(sum)
+	drawSlices(canvas, center, radius, pie, sum)
+
+	legendLeft := center.X + radius + legendGap
+	rowHeight := min(legendRowHeight, (top-bottom)/vg.Length(len(pie)))
+	legendTop := center.Y + rowHeight*vg.Length(len(pie))*half - rowHeight*half
+
+	drawLegend(canvas, legendLeft, legendTop, rowHeight, unit, pie, sum)
+}
+
+// drawSlices draws the slices of pie, whose values add up to sum, clockwise from the top.
+func drawSlices(canvas draw.Canvas, center vg.Point, radius vg.Length, pie []slice, sum int) {
+	start := math.Pi * half
+
+	for _, entry := range pie {
+		share := float64(entry.value) / float64(sum)
+		sweep := fullTurn * share
+
 		var wedge vg.Path
 		wedge.Move(center)
 		wedge.Arc(center, radius, start, -sweep)
 		wedge.Close()
-		dc.SetColor(s.color)
-		dc.Fill(wedge)
+		canvas.SetColor(entry.color)
+		canvas.Fill(wedge)
+
 		if len(pie) > 1 {
-			dc.SetLineStyle(draw.LineStyle{Color: backgroundColor, Width: vg.Points(1.5)})
-			dc.Stroke(wedge)
+			canvas.SetLineStyle(draw.LineStyle{Color: backgroundColor(), Width: vg.Points(sliceBorder)})
+			canvas.Stroke(wedge)
 		}
 
-		if share := float64(s.value) / float64(sum); share >= minPercentLabel {
-			middle := start - sweep/2
-			style := textStyle(13, true, contrastingText(s.color))
+		if share >= minPercentLabel {
+			middle := start - sweep*half
+			style := textStyle(percentSize, true, contrastingText(entry.color))
 			style.XAlign, style.YAlign = draw.XCenter, draw.YCenter
 			at := vg.Point{
-				X: center.X + vg.Length(0.68*math.Cos(middle))*radius,
-				Y: center.Y + vg.Length(0.68*math.Sin(middle))*radius,
+				X: center.X + vg.Length(percentRadius*math.Cos(middle))*radius,
+				Y: center.Y + vg.Length(percentRadius*math.Sin(middle))*radius,
 			}
-			dc.FillText(style, at, fmt.Sprintf("%.1f%%", 100*share))
+			canvas.FillText(style, at, fmt.Sprintf("%.1f%%", fullPercent*share))
 		}
+
 		start -= sweep
 	}
+}
 
-	legendLeft := center.X + radius + 0.8*vg.Inch
-	legendWidth := dc.Max.X - legendLeft
-	rowHeight := min(0.42*vg.Inch, (top-bottom)/vg.Length(len(pie)))
-	fontSize := max(9, min(16, rowHeight*0.55))
-	style := textStyle(fontSize, false, textColor)
+// drawLegend draws a row per slice of pie, from the row at height top, at legendLeft.
+func drawLegend(canvas draw.Canvas, legendLeft, top, rowHeight vg.Length, unit string, pie []slice, sum int) {
+	legendWidth := canvas.Max.X - legendLeft
+	fontSize := max(legendMinFont, min(legendMaxFont, rowHeight*legendFontRatio))
+	style := textStyle(fontSize, false, textColor())
 	style.YAlign = draw.YCenter
-	y := center.Y + rowHeight*vg.Length(len(pie))/2 - rowHeight/2
-	for _, s := range pie {
-		swatch := vg.Rectangle{
-			Min: vg.Point{X: legendLeft, Y: y - fontSize/2},
-			Max: vg.Point{X: legendLeft + fontSize, Y: y + fontSize/2},
-		}
-		dc.SetColor(s.color)
-		dc.Fill(swatch.Path())
 
-		label := fmt.Sprintf("%s: %s %s (%.1f%%)", s.label, formatCount(s.value), unit,
-			100*float64(s.value)/float64(sum))
-		textLeft := legendLeft + 1.6*fontSize
-		dc.FillText(style, vg.Point{X: textLeft, Y: y}, fit(style, label, legendWidth-(textLeft-legendLeft)))
-		y -= rowHeight
+	row := top
+	for _, entry := range pie {
+		swatch := vg.Rectangle{
+			Min: vg.Point{X: legendLeft, Y: row - fontSize/2},
+			Max: vg.Point{X: legendLeft + fontSize, Y: row + fontSize/2},
+		}
+
+		canvas.SetColor(entry.color)
+		canvas.Fill(swatch.Path())
+
+		label := fmt.Sprintf("%s: %s %s (%.1f%%)", entry.label, formatCount(entry.value), unit,
+			fullPercent*float64(entry.value)/float64(sum))
+		textLeft := legendLeft + legendTextOffset*fontSize
+		canvas.FillText(style, vg.Point{X: textLeft, Y: row}, fit(style, label, legendWidth-(textLeft-legendLeft)))
+		row -= rowHeight
 	}
 }
 
@@ -121,6 +169,7 @@ func fit(style text.Style, label string, width vg.Length) string {
 	if style.Width(label) <= width {
 		return label
 	}
+
 	runes := []rune(label)
 	for len(runes) > 1 {
 		runes = runes[:len(runes)-1]
@@ -128,15 +177,28 @@ func fit(style text.Style, label string, width vg.Length) string {
 			return shortened
 		}
 	}
+
 	return string(runes)
 }
 
+// Weights of the channels in the luminance of a color, and luminance from which a color
+// is light.
+const (
+	redWeight      = 0.299
+	greenWeight    = 0.587
+	blueWeight     = 0.114
+	maxChannel     = 0xFFFF
+	lightThreshold = 0.6
+)
+
 // contrastingText returns the color of a text readable on background.
 func contrastingText(background color.Color) color.Color {
-	r, g, b, _ := background.RGBA()
-	luminance := (0.299*float64(r) + 0.587*float64(g) + 0.114*float64(b)) / 0xFFFF
-	if luminance > 0.6 {
+	red, green, blue, _ := background.RGBA()
+
+	luminance := (redWeight*float64(red) + greenWeight*float64(green) + blueWeight*float64(blue)) / maxChannel
+	if luminance > lightThreshold {
 		return color.Black
 	}
+
 	return color.White
 }

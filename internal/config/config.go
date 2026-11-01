@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 // Config is the configuration of a run. Every option of the file is optional.
@@ -15,6 +16,7 @@ type Config struct {
 	// when missing.
 	ResultDir string `json:"resultDir"`
 	// WordsToSearchFor are words or phrases counted in the messages, regardless of case.
+	// The empty ones are left out.
 	WordsToSearchFor []string `json:"wordsToSearchFor"`
 	// OutputTextRanking also writes the text rankings, next to the graphs.
 	OutputTextRanking bool `json:"outputTextRanking"`
@@ -46,6 +48,9 @@ func Load(path string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("invalid configuration file %s: %w", path, err)
 	}
+
+	// An empty word would be found in every message.
+	cfg.WordsToSearchFor = slices.DeleteFunc(cfg.WordsToSearchFor, func(word string) bool { return word == "" })
 
 	if cfg.ResultDir == "" {
 		return Config{}, fmt.Errorf("invalid configuration file %s: resultDir is empty", path)

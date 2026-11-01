@@ -32,14 +32,22 @@ import (
 
 func main() {
 	err := run(os.Args[1:], os.Stderr)
-	if err != nil {
-		if !errors.Is(err, flag.ErrHelp) {
-			_, _ = fmt.Fprintln(os.Stderr, "instagram-stats:", err)
-		}
 
-		os.Exit(1)
+	// The usage was asked for and printed: that is not a failure.
+	if err == nil || errors.Is(err, flag.ErrHelp) {
+		return
 	}
+
+	if !errors.Is(err, errReported) {
+		_, _ = fmt.Fprintln(os.Stderr, "instagram-stats:", err)
+	}
+
+	os.Exit(1)
 }
+
+// errReported wraps the errors already written to the standard error, such as an
+// invalid flag reported by the flag package.
+var errReported = errors.New("already reported")
 
 const usageText = `Usage: instagram-stats [flags] <source>...
 
@@ -70,7 +78,8 @@ func run(args []string, stderr io.Writer) error {
 
 	err := flags.Parse(args)
 	if err != nil {
-		return fmt.Errorf("parsing the flags: %w", err)
+		// The flag package already printed the error and the usage.
+		return fmt.Errorf("%w: parsing the flags: %w", errReported, err)
 	}
 
 	if flags.NArg() == 0 {

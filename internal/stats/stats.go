@@ -12,11 +12,14 @@ import (
 	"github.com/boxboxjason/instagram-stats/internal/export"
 )
 
+// daysInWeek and hoursInDay are the dimensions of the grid of a week.
+const (
+	daysInWeek = 7
+	hoursInDay = 24
+)
+
 // likedMessage is the content of the messages Instagram logs for a like, which are
 // not messages sent by the participant.
-// daysInWeek is the number of days of a week.
-const daysInWeek = 7
-
 const likedMessage = "Liked a message"
 
 // attachmentPlaceholder ends the content Instagram writes for a message whose
@@ -47,7 +50,7 @@ type Stats struct {
 	days         map[time.Time]int
 	searched     []string
 	participants []*Participant
-	week         [7][24]int
+	week         [daysInWeek][hoursInDay]int
 }
 
 // New returns empty statistics. Messages are dated in location, and the words
@@ -161,15 +164,15 @@ func (s *Stats) Months() []Count {
 // AverageWeek returns the average number of messages sent on each day of the week,
 // from Monday, and each hour of the day, over the weeks from the first message to
 // the last one.
-func (s *Stats) AverageWeek() [7][24]float64 {
-	var average [7][24]float64
+func (s *Stats) AverageWeek() [daysInWeek][hoursInDay]float64 {
+	var average [daysInWeek][hoursInDay]float64
 
 	first, last, ok := s.span()
 	if !ok {
 		return average
 	}
 
-	var occurrences [7]int
+	var occurrences [daysInWeek]int
 	for day := first; !day.After(last); day = day.AddDate(0, 0, 1) {
 		occurrences[weekdayIndex(day.Weekday())]++
 	}

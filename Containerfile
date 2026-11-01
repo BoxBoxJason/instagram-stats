@@ -14,13 +14,18 @@ FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4c
 
 RUN apk add --no-cache ca-certificates \
     && addgroup -S instagram-stats \
-    && adduser -S instagram-stats -G instagram-stats
+    && adduser -S instagram-stats -G instagram-stats \
+    && mkdir /work \
+    && chown instagram-stats:instagram-stats /work
 
 FROM scratch
 
 COPY --from=security_provider /etc/passwd /etc/passwd
 COPY --from=security_provider /etc/group /etc/group
+# The default result folder, Results, is relative to the current folder: it must be writable.
+COPY --from=security_provider --chown=instagram-stats:instagram-stats /work /work
 
+WORKDIR /work
 USER instagram-stats
 
 COPY --from=build /app/bin/instagram-stats /usr/local/bin/instagram-stats

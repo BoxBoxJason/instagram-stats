@@ -36,6 +36,11 @@ func TestLoad(t *testing.T) {
 			content: `{"wordsToSearchFor": ["lol"]}`,
 			want:    Config{ResultDir: "Results", WordsToSearchFor: []string{"lol"}, OutputTextRanking: true},
 		},
+		{
+			name:    "empty words are left out",
+			content: `{"wordsToSearchFor": ["", "lol", ""]}`,
+			want:    Config{ResultDir: "Results", WordsToSearchFor: []string{"lol"}, OutputTextRanking: true},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

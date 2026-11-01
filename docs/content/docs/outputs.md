@@ -17,7 +17,7 @@ The graphs are 1600×900 PNG images, on a dark background, named after their tit
 | `Number of Reels sent.png` | Pie chart of the number of reels, posts and profiles each participant shared. |
 | `Number of photos and videos sent.png` | Pie chart of the number of messages with photos or videos each participant sent. |
 | `Vocabulary.png` | Pie chart of the number of different words each participant used. Its total is the number of different words of the whole conversation. |
-| `Number of words found.png` | Pie chart of how many times each participant used the [searched words](#words-found). |
+| `Number of words found.png` | Pie chart of how many of the messages of each participant contain the [searched words](#words-found), once per word. |
 | `Activity by time and day.png` | Heatmap of the average number of messages sent on each day of the week, at each hour: the busiest periods of an average week. |
 | `Number of messages per day.png` | Bar graph of the number of messages sent each day, from the first message to the last one. |
 | `Number of messages per month.png` | Bar graph of the number of messages sent each month. |
@@ -41,7 +41,7 @@ Unless `outputTextRanking` is `false`, the per participant counts are also writt
 | `Number of reels.txt` | Participants ranked by number of reels shared. |
 | `Number of photos and videos.txt` | Participants ranked by number of photos and videos. |
 | `Vocabulary richness.txt` | Participants ranked by number of different words. |
-| `Number of words found.txt` | Participants ranked by uses of the [searched words](#words-found). |
+| `Number of words found.txt` | Participants ranked by messages containing the [searched words](#words-found), once per word. |
 
 Each line is a position of the ranking, with the participants sharing it:
 
@@ -61,4 +61,4 @@ Number of messages ranking (Total 1520):
 
 ## Words found
 
-The `Number of words found` graph and ranking are only produced when [`wordsToSearchFor`]({{< relref "configuration#options" >}}) is not empty.
+The `Number of words found` graph and ranking are only produced when [`wordsToSearchFor`]({{< relref "configuration#options" >}}) is not empty. A message counts once for each searched word it contains, however many times it contains it.

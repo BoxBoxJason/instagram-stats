@@ -44,6 +44,7 @@ test: deps
 	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum..."; go install gotest.tools/gotestsum@$(gotestsum_version); }
 	@mkdir -p codequality
 	gotestsum --junitfile codequality/unit-tests.xml --format-icons octicons -- -coverprofile=codequality/coverage.out -covermode=atomic ./...
+	$(GO) tool cover -html=codequality/coverage.out -o codequality/coverage.html
 	@echo "Coverage report generated: codequality/coverage.html"
 
 # Scan dependencies and stdlib for known vulnerabilities (govulncheck).
@@ -57,4 +58,4 @@ package:
 	$(DOCKER_ENGINE) build -t $(PROJECT_NAME):dev -f $(DOCKERFILE) .
 
 # Phony targets
-.PHONY: deps build lint dependency-check test package
+.PHONY: deps build lint dependency-check test vuln package

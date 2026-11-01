@@ -3,6 +3,7 @@ package export
 import (
 	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -129,12 +130,40 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("files and folders", func(t *testing.T) {
-		conversations, err := Load([]string{aliceFile, filepath.Dir(aliceFile)}, discard)
+		// The file is in the folder too, it is read once.
+		conversations, err := Load([]string{aliceFile, filepath.Dir(aliceFile), "testdata/messages"}, discard)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(conversations) != 2 {
-			t.Errorf("got %d conversations, want 2", len(conversations))
+		if len(conversations) != 1 {
+			t.Errorf("got %d conversations, want 1", len(conversations))
+		}
+	})
+
+	t.Run("unreadable subfolder", func(t *testing.T) {
+		if os.Geteuid() == 0 {
+			t.Skip("root can list any folder")
+		}
+		dir := t.TempDir()
+		data, err := os.ReadFile(aliceFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "message_1.json"), data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		locked := filepath.Join(dir, "locked")
+		if err := os.Mkdir(locked, 0o000); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(locked, 0o700) })
+
+		conversations, err := Load([]string{dir}, discard)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(conversations) != 1 {
+			t.Errorf("got %d conversations, want 1", len(conversations))
 		}
 	})
 

@@ -1,6 +1,6 @@
 ---
 title: instagram-stats
-description: "Turn your Instagram message export into graphs and rankings: who talks most, when, and with which words. Runs locally in Python."
+description: "Turn your Instagram message export into graphs and rankings: who talks most, when, and with which words. A single program that runs locally."
 layout: hextra-home
 ---
 

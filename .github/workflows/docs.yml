@@ -8,16 +8,20 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
-      - "Config/Config.py"
-      - "__main__.py"
+      # The drift check reads the options and the output files from the code.
+      - "docs_test.go"
+      - "internal/config/**"
+      - "internal/report/**"
   push:
     branches:
       - main
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
-      - "Config/Config.py"
-      - "__main__.py"
+      # The drift check reads the options and the output files from the code.
+      - "docs_test.go"
+      - "internal/config/**"
+      - "internal/report/**"
   schedule:
     # Weekly, to catch links to other websites that went dead.
     - cron: "41 5 * * 1"
@@ -46,5 +50,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
       - name: Check the configuration options and output files are documented
-        run: python3 -I docs/check_docs.py
+        run: go test -run TestDocumentation .

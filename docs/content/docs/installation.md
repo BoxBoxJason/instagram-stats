@@ -1,26 +1,29 @@
 ---
 title: Installation
-description: "Install instagram-stats: Python 3, its only dependency matplotlib, and how to get the project code on your machine."
+description: "Install instagram-stats, a single Go program with no runtime dependency, with go install or from its source code."
 weight: 10
 ---
 
-instagram-stats is a Python program. It needs:
+instagram-stats is a single program, written in Go: once built, it needs nothing else to run.
 
-- Python 3
-- [matplotlib](https://matplotlib.org/), the only third party dependency
+## With go install
 
-Install matplotlib, preferably in a virtual environment:
+With [Go](https://go.dev/dl/) 1.26 or later installed:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install matplotlib
+go install github.com/boxboxjason/instagram-stats@latest
 ```
 
-Then get the code:
+The `instagram-stats` program is installed in the `bin` folder of your Go path, `~/go/bin` by default: add that folder to your `PATH` to run it from anywhere.
+
+## From the source code
 
 ```bash
 git clone https://github.com/boxboxjason/instagram-stats.git
+cd instagram-stats
+go build
 ```
 
-The program is the `instagram-stats` directory itself: Python runs it through its `__main__.py` file, see [Usage]({{< relref "usage" >}}).
+This builds the `instagram-stats` program in the project folder. `go test ./...` runs the tests.
+
+Then see [Usage]({{< relref "usage" >}}).

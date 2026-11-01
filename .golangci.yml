@@ -1,0 +1,57 @@
+version: 2
+
+run:
+  timeout: 5m
+  tests: false
+
+# Output format to generate checkstyle report (used by CI)
+output:
+  formats:
+    checkstyle:
+      path: codequality/golangci-lint-report.xml
+    text:
+      path: stdout
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: github.com/boxboxjason/instagram-stats
+    gofmt:
+      simplify: true
+
+linters:
+  default: all
+  disable:
+    - depguard
+    - err113
+    - exhaustruct
+    - exhaustruct_v5
+    - gomodguard
+    - ireturn
+    - lll
+    - wsl
+  settings:
+    govet:
+      enable-all: true
+    gci:
+      custom-order: true
+      sections:
+        - standard
+        - default
+        - prefix(github.com/boxboxjason/instagram-stats)
+      skip-generated: true
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+    tagliatelle:
+      case:
+        rules:
+          json: camel
+        overrides:
+          # The Instagram export is written in snake_case.
+          - pkg: internal/export
+            rules:
+              json: snake

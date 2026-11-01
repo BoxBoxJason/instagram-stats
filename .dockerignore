@@ -1,0 +1,8 @@
+# Keep the local data out of the build context: the Instagram export and the results
+# hold private messages. .git is kept, the build stamps its version (-buildvcs).
+/data
+/Results
+/bin
+/codequality
+/dependency-check
+/instagram-stats

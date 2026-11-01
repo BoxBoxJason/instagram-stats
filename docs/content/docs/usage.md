@@ -4,42 +4,52 @@ description: "Run instagram-stats on an Instagram conversation folder, analyse s
 weight: 30
 ---
 
-Run the project directory with Python, giving it the folder of the conversation to analyse:
+Run instagram-stats on the folder of the conversation to analyse:
 
 ```bash
-python3 instagram-stats <source folder> [<config file>]
+instagram-stats [flags] <source>...
 ```
 
-| Argument | Mandatory | Description |
-| -------- | --------- | ----------- |
-| `<source folder>` | Yes | Folder holding the `.json` message files to analyse. The files must be directly in that folder. |
-| `<config file>` | No | Path to a `.json` [configuration file]({{< relref "configuration" >}}). Defaults to `Config/config.json` in the project. When the file does not exist, cannot be read or does not end with `.json`, the default configuration is used. |
+A source is one of:
+
+- a conversation folder of the [export]({{< relref "export" >}}), such as `messages/inbox/alice_123456789`;
+- a folder of conversations, such as `messages/inbox`: every conversation in it is analysed;
+- a `message_<n>.json` file.
+
+The `.json` files of a folder are read in its subfolders too. The other files, like the photos and videos of the export, and the `.json` files that are not conversations, are skipped.
+
+| Flag | Description |
+| ---- | ----------- |
+| `-config <file>` | Path to a `.json` [configuration file]({{< relref "configuration" >}}). Without it, the default configuration is used. |
+| `-verbose` | Log every file read and written. |
+| `-log-file <file>` | Also write the logs to this file, after its current content, as JSON lines. |
 
 For example:
 
 ```bash
-python3 instagram-stats ~/instagram-export/messages/inbox/alice_123456789
+instagram-stats ~/instagram-export/your_instagram_activity/messages/inbox/alice_123456789
 ```
 
-The graphs and rankings are written to the result folder, `Results` in the project by default (see [Configuration]({{< relref "configuration#options" >}})).
-
-{{< callout type="warning" >}}
-The result folder must already exist and be writable: instagram-stats does not create it, and stops with an error when it is missing.
-{{< /callout >}}
+The graphs and rankings are written to the result folder, `Results` in the current folder by default (see [Configuration]({{< relref "configuration#options" >}})). It is created when missing.
 
 ## Analysing several conversations together
 
-instagram-stats reads every `.json` file directly in the source folder, so it can mix conversations: copy their message files into a single folder. As every conversation names its files `message_1.json`, `message_2.json`, ..., rename them on the way so they do not overwrite each other:
+Several sources are analysed together, as a single conversation. Give them one after the other:
 
 ```bash
-mkdir mixed
-cp inbox/alice_123456789/message_1.json mixed/alice_1.json
-cp inbox/friends_group_987654321/message_1.json mixed/friends_1.json
-python3 instagram-stats mixed
+instagram-stats inbox/alice_123456789 inbox/friends_group_987654321
 ```
 
-Files that are not `.json`, or that cannot be read, are skipped with an error in the logs.
+Or give the folder holding them to analyse all your conversations at once:
+
+```bash
+instagram-stats ~/instagram-export/your_instagram_activity/messages/inbox
+```
 
 ## Logs
 
-Progress is printed to the console, and also written to `logging.log` in the project directory.
+Progress is logged to the console (standard error). Files that cannot be read are skipped with a warning in the logs. Add `-log-file` to also keep the logs in a file, one JSON object per line, easy to process with tools like `jq`:
+
+```json
+{"level":"info","ts":"2026-11-01T23:37:34.042+0100","msg":"read conversations","files":109,"messages":121110,"participants":118}
+```

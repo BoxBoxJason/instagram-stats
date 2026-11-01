@@ -29,4 +29,4 @@ messages/
       message_1.json
 ```
 
-The folder of the conversation you want statistics for is the one you give to instagram-stats, see [Usage]({{< relref "usage" >}}).
+The folder of the conversation you want statistics for is the one you give to instagram-stats, or the `inbox` folder itself for statistics on all your conversations, see [Usage]({{< relref "usage" >}}).

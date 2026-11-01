@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"github.com/boxboxjason/instagram-stats/internal/config"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,5 +59,45 @@ func TestRunErrors(t *testing.T) {
 				t.Error("got no error")
 			}
 		})
+	}
+}
+
+func TestWriteReportCreateError(t *testing.T) {
+	blocker := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := config.Default()
+	cfg.ResultDir = filepath.Join(blocker, "results")
+
+	if err := writeReport(cfg, nil, zap.NewNop()); err == nil {
+		t.Fatal("expected an error when the result folder cannot be created")
+	}
+}
+
+func TestRunFailures(t *testing.T) {
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, "config.json")
+	if err := os.WriteFile(cfgPath, []byte(`{"resultDir": "`+filepath.ToSlash(dir)+`/out"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := map[string][]string{
+		"bad log file": {"-log-file", filepath.Join(dir, "missing", "x.log"), testExport},
+		"bad source":   {"-config", cfgPath, filepath.Join(dir, "nope")},
+	}
+	for name, args := range tests {
+		t.Run(name, func(t *testing.T) {
+			var stderr bytes.Buffer
+			if err := run(args, &stderr); err == nil {
+				t.Fatal("expected an error")
+			}
+		})
+	}
+
+	var stderr bytes.Buffer
+	if err := run([]string{"-verbose", "-config", cfgPath, testExport}, &stderr); err != nil {
+		t.Fatalf("verbose run: %v", err)
 	}
 }

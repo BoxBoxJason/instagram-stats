@@ -150,3 +150,9 @@ func TestLoad(t *testing.T) {
 		}
 	})
 }
+
+func TestTextString(t *testing.T) {
+	if got := Text("héllo").String(); got != "héllo" {
+		t.Fatalf("String() = %q", got)
+	}
+}

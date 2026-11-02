@@ -4,6 +4,8 @@ Creates statistics from your Instagram conversations: it reads the messages of y
 
 It can analyse one to one conversations, group conversations, and even all your conversations together. Your data stays on your machine.
 
+[![Watch the instagram-stats video](./docs/static/images/discover.jpg)](https://boxboxjason.github.io/instagram-stats/videos/discover.mp4)
+
 ## Documentation
 
 📖 **<https://boxboxjason.github.io/instagram-stats/>**

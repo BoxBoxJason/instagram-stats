@@ -32,3 +32,7 @@ layout: hextra-home
     subtitle="Reads the JSON files of your Instagram export locally. Nothing is uploaded anywhere."
   >}}
 {{< /hextra/feature-grid >}}
+
+{{< spacer "3rem" >}}
+
+{{< video "videos/discover.mp4" >}}
